@@ -20,16 +20,70 @@ import 'package:ub_t/features/courses/domain/usecases/get_student_courses.dart';
 import 'package:ub_t/features/courses/domain/usecases/register_courses.dart';
 import 'package:ub_t/features/courses/presentation/bloc/course_bloc.dart';
 
+// Resource feature imports
+import 'package:ub_t/features/resources/data/datasources/resource_remote_data_source.dart';
+import 'package:ub_t/features/resources/data/repository/resource_repository_impl.dart';
+import 'package:ub_t/features/resources/domain/repository/resource_repository.dart';
+import 'package:ub_t/features/resources/domain/usecases/get_resources_by_course.dart';
+import 'package:ub_t/features/resources/domain/usecases/get_resource_by_id.dart';
+import 'package:ub_t/features/resources/presentation/bloc/resource_bloc.dart';
+
+// Payment feature imports
+import 'package:ub_t/features/payment/data/datasources/payment_remote_data_source.dart';
+import 'package:ub_t/features/payment/data/repository/payment_repository_impl.dart';
+import 'package:ub_t/features/payment/domain/repository/payment_repository.dart';
+import 'package:ub_t/features/payment/domain/usecases/make_payment.dart';
+import 'package:ub_t/features/payment/domain/usecases/is_premium_user.dart';
+import 'package:ub_t/features/payment/presentation/bloc/payment_bloc.dart';
+
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
   await _initHive();
-  await _initSupabase(); 
-  
+  await _initSupabase();
+
   _initAuth();
   _initCourses();
-  
+  _initResources();
+  _initPayment();
+
   serviceLocator.registerLazySingleton(() => AppUserCubit());
+}
+
+void _initPayment() {
+  serviceLocator
+    ..registerFactory<PaymentRemoteDataSource>(
+      () => PaymentRemoteDataSourceImpl(),
+    )
+    ..registerFactory<PaymentRepository>(
+      () => PaymentRepositoryImpl(serviceLocator()),
+    )
+    ..registerFactory(() => MakePayment(serviceLocator()))
+    ..registerFactory(() => IsPremiumUser(serviceLocator()))
+    ..registerLazySingleton(
+      () => PaymentBloc(
+        makePayment: serviceLocator(),
+        isPremiumUser: serviceLocator(),
+      ),
+    );
+}
+
+void _initResources() {
+  serviceLocator
+    ..registerFactory<ResourceRemoteDataSource>(
+      () => ResourceRemoteDataSourceImpl(),
+    )
+    ..registerFactory<ResourceRepository>(
+      () => ResourceRepositoryImpl(serviceLocator()),
+    )
+    ..registerFactory(() => GetResourcesByCourse(serviceLocator()))
+    ..registerFactory(() => GetResourceById(serviceLocator()))
+    ..registerLazySingleton(
+      () => ResourceBloc(
+        getResourcesByCourse: serviceLocator(),
+        getResourceById: serviceLocator(),
+      ),
+    );
 }
 
 Future<void> _initHive() async {
@@ -58,15 +112,9 @@ void _initAuth() {
     ..registerFactory<AuthRepository>(
       () => AuthRepositoryImpl(serviceLocator()),
     )
-    ..registerFactory(
-      () => UserSignUp(serviceLocator()),
-    )
-    ..registerFactory(
-      () => UserLogin(serviceLocator()),
-    )
-    ..registerFactory(
-      () => CurrentUser(serviceLocator()),
-    )
+    ..registerFactory(() => UserSignUp(serviceLocator()))
+    ..registerFactory(() => UserLogin(serviceLocator()))
+    ..registerFactory(() => CurrentUser(serviceLocator()))
     ..registerLazySingleton(
       () => AuthBloc(
         userSignUp: serviceLocator(),
@@ -85,15 +133,9 @@ void _initCourses() {
     ..registerFactory<CourseRepository>(
       () => CourseRepositoryImpl(serviceLocator()),
     )
-    ..registerFactory(
-      () => GetAvailableCourses(serviceLocator()),
-    )
-    ..registerFactory(
-      () => GetStudentCourses(serviceLocator()),
-    )
-    ..registerFactory(
-      () => RegisterCourses(serviceLocator()),
-    )
+    ..registerFactory(() => GetAvailableCourses(serviceLocator()))
+    ..registerFactory(() => GetStudentCourses(serviceLocator()))
+    ..registerFactory(() => RegisterCourses(serviceLocator()))
     ..registerLazySingleton(
       () => CourseBloc(
         getAvailableCourses: serviceLocator(),
