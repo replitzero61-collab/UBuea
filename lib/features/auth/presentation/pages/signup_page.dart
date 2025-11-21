@@ -12,9 +12,11 @@ import 'package:ub_t/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ub_t/features/auth/presentation/widgets/auth_field.dart';
 import 'package:ub_t/features/auth/presentation/widgets/auth_gradient_button.dart';
 
+import 'package:ub_t/features/courses/presentation/pages/course_selection_page.dart';
+
 class SignUpPage extends StatefulWidget {
   static route() => MaterialPageRoute(builder: (context) => const SignUpPage());
-  
+
   const SignUpPage({super.key});
 
   @override
@@ -26,7 +28,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _matriculeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   String? _selectedDepartment;
   int? _selectedLevel;
   bool _obscurePassword = true;
@@ -56,13 +58,13 @@ class _SignUpPageState extends State<SignUpPage> {
       }
 
       context.read<AuthBloc>().add(
-            AuthSignUp(
-              matriculeNumber: _matriculeController.text.trim(),
-              password: _passwordController.text,
-              department: _selectedDepartment!,
-              level: _selectedLevel!,
-            ),
-          );
+        AuthSignUp(
+          matriculeNumber: _matriculeController.text.trim(),
+          password: _passwordController.text,
+          department: _selectedDepartment!,
+          level: _selectedLevel!,
+        ),
+      );
     }
   }
 
@@ -74,7 +76,7 @@ class _SignUpPageState extends State<SignUpPage> {
           if (state is AuthFailure) {
             showErrorSnackBar(context, state.message);
           } else if (state is AuthSuccess) {
-            Navigator.of(context).pushReplacementNamed('/home');
+            Navigator.of(context).pushReplacement(CourseSelectionPage.route());
           }
         },
         builder: (context, state) {
@@ -88,7 +90,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 padding: Responsive.padding(context),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: Responsive.isDesktop(context) ? 500 : double.infinity,
+                    maxWidth: Responsive.isDesktop(context)
+                        ? 500
+                        : double.infinity,
                   ),
                   child: Form(
                     key: _formKey,
@@ -128,13 +132,15 @@ class _SignUpPageState extends State<SignUpPage> {
                             hintText: 'Select Department',
                           ),
                           items: AppConstants.departments
-                              .map((dept) => DropdownMenuItem(
-                                    value: dept,
-                                    child: Text(
-                                      dept,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ))
+                              .map(
+                                (dept) => DropdownMenuItem(
+                                  value: dept,
+                                  child: Text(
+                                    dept,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              )
                               .toList(),
                           onChanged: (value) {
                             setState(() {
@@ -155,10 +161,12 @@ class _SignUpPageState extends State<SignUpPage> {
                             hintText: 'Select Level',
                           ),
                           items: AppConstants.availableLevels
-                              .map((level) => DropdownMenuItem(
-                                    value: level,
-                                    child: Text('Level $level'),
-                                  ))
+                              .map(
+                                (level) => DropdownMenuItem(
+                                  value: level,
+                                  child: Text('Level $level'),
+                                ),
+                              )
                               .toList(),
                           onChanged: (value) {
                             setState(() {
@@ -205,7 +213,8 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),

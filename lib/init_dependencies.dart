@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart'; // 1. Required for kIsWeb
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,18 +12,22 @@ import 'package:ub_t/features/auth/domain/usecases/current_user.dart';
 import 'package:ub_t/features/auth/domain/usecases/user_login.dart';
 import 'package:ub_t/features/auth/domain/usecases/user_signup.dart';
 import 'package:ub_t/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ub_t/features/courses/data/datasources/course_remote_data_source.dart';
+import 'package:ub_t/features/courses/data/repository/course_repository_impl.dart';
+import 'package:ub_t/features/courses/domain/repository/course_repository.dart';
+import 'package:ub_t/features/courses/domain/usecases/get_available_courses.dart';
+import 'package:ub_t/features/courses/domain/usecases/get_student_courses.dart';
+import 'package:ub_t/features/courses/domain/usecases/register_courses.dart';
+import 'package:ub_t/features/courses/presentation/bloc/course_bloc.dart';
 
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
   await _initHive();
-  
-  // Note: Supabase initialization is synchronous in your code, 
-  // but usually, it's better to await Supabase.initialize() if using the static method.
-  // However, since you are instantiating the Client manually, this is fine.
- await _initSupabase(); 
+  await _initSupabase(); 
   
   _initAuth();
+  _initCourses();
   
   serviceLocator.registerLazySingleton(() => AppUserCubit());
 }
@@ -69,6 +73,32 @@ void _initAuth() {
         userLogin: serviceLocator(),
         currentUser: serviceLocator(),
         appUserCubit: serviceLocator(),
+      ),
+    );
+}
+
+void _initCourses() {
+  serviceLocator
+    ..registerFactory<CourseRemoteDataSource>(
+      () => CourseRemoteDataSourceImpl(serviceLocator()),
+    )
+    ..registerFactory<CourseRepository>(
+      () => CourseRepositoryImpl(serviceLocator()),
+    )
+    ..registerFactory(
+      () => GetAvailableCourses(serviceLocator()),
+    )
+    ..registerFactory(
+      () => GetStudentCourses(serviceLocator()),
+    )
+    ..registerFactory(
+      () => RegisterCourses(serviceLocator()),
+    )
+    ..registerLazySingleton(
+      () => CourseBloc(
+        getAvailableCourses: serviceLocator(),
+        getStudentCourses: serviceLocator(),
+        registerCourses: serviceLocator(),
       ),
     );
 }
